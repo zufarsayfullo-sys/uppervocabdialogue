@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigate B2 · Dialogue: Word Order | Meeting Planning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eef2f0;
+            font-family: 'Inter', sans-serif;
+            padding: 40px 20px;
+            color: #1a2a2a;
+        }
+
+        /* main container – elegant coursebook style */
+        .exercise-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* header */
+        .header {
+            background: #0f2c2c;
+            padding: 28px 36px;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: -0.2px;
+            margin-bottom: 8px;
+        }
+
+        .header h1 span {
+            color: #bfa57d;
+            font-style: italic;
+        }
+
+        .sub {
+            font-size: 14px;
+            opacity: 0.75;
+            border-left: 3px solid #bfa57d;
+            padding-left: 14px;
+            margin-top: 8px;
+        }
+
+        /* dialogue area */
+        .dialogue-box {
+            padding: 32px 36px;
+            background: #fefcf8;
+        }
+
+        .speech {
+            margin-bottom: 28px;
+            line-height: 1.55;
+            font-size: 16px;
+        }
+
+        .speaker {
+            font-weight: 700;
+            color: #1f5e5e;
+            display: inline-block;
+            min-width: 70px;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+
+        .text {
+            display: inline;
+            color: #1e2f2f;
+        }
+
+        /* blank spaces (interactive gaps) */
+        .word-gap {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            background: #f0f3f0;
+            border-radius: 60px;
+            padding: 6px 16px 6px 20px;
+            margin: 0 4px;
+            border: 1px solid #d4dfd4;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .word-option {
+            background: white;
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1c4d4d;
+            cursor: grab;
+            user-select: none;
+            transition: 0.1s linear;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 0 1px #e2e8e2;
+            font-family: 'Inter', monospace;
+            letter-spacing: 0.2px;
+        }
+
+        .word-option:active {
+            cursor: grabbing;
+        }
+
+        .word-option.dragging {
+            opacity: 0.4;
+        }
+
+        .slot-container {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            background: #eef3ee;
+            border-radius: 48px;
+            padding: 5px 12px 5px 16px;
+            margin: 0 6px;
+            border: 1px dashed #8fa88f;
+            min-width: 180px;
+        }
+
+        .slot-word {
+            background: #2c5a5a;
+            color: white;
+            border-radius: 32px;
+            padding: 5px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .slot-word:hover {
+            background: #1f4646;
+            transform: scale(0.97);
+        }
+
+        .reset-icon {
+            font-size: 12px;
+            margin-left: 8px;
+            cursor: pointer;
+            color: #8faa8f;
+            transition: 0.1s;
+        }
+
+        .reset-icon:hover {
+            color: #c03b2b;
+        }
+
+        .check-area {
+            margin-top: 32px;
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-top: 1px solid #e2e6df;
+            padding-top: 28px;
+        }
+
+        .btn {
+            border: none;
+            background: #1f5e5e;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-secondary {
+            background: #e4e9e2;
+            color: #2a4b4b;
+            border: 1px solid #cbd8cb;
+        }
+
+        .btn-secondary:hover {
+            background: #d1dbd1;
+        }
+
+        .btn:hover {
+            background: #0f4646;
+            transform: translateY(-1px);
+        }
+
+        .feedback {
+            background: #f2f6ef;
+            border-radius: 24px;
+            padding: 14px 22px;
+            font-size: 14px;
+            color: #2c5a5a;
+            border-left: 5px solid #bfa57d;
+            margin-top: 18px;
+        }
+
+        .feedback.correct {
+            background: #e0f0e0;
+            border-left-color: #3b8b3b;
+            color: #1c4a1c;
+        }
+
+        .feedback.wrong {
+            background: #ffeae9;
+            border-left-color: #c23b2b;
+            color: #8b2c1f;
+        }
+
+        hr {
+            margin: 18px 0;
+            border: 0;
+            height: 1px;
+            background: #e0e6db;
+        }
+
+        .small-note {
+            font-size: 12px;
+            color: #6f836f;
+            margin-top: 12px;
+            text-align: right;
+            font-style: italic;
+        }
+
+        @media (max-width: 650px) {
+            .dialogue-box {
+                padding: 20px;
+            }
+            .word-option, .slot-word {
+                font-size: 12px;
+                padding: 4px 10px;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="exercise-container">
+    <div class="header">
+        <h1>📋 diplomatic agenda · <span>word order</span></h1>
+        <div class="sub">Read the dialogue. Put the words in italics in the right order to complete each gap.</div>
+    </div>
+    <div class="dialogue-box" id="dialogueRoot">
+        <!-- dynamic dialogue will be rendered here -->
+    </div>
+</div>
+
+<script>
+    // ---------- ORIGINAL DIALOGUE DATA ----------
+    // Each gap: id (0-based), correct sequence (array of strings), initial shuffled array
+    const gapsData = [
+        {   // gap 1: "like / say / something / if / to" → correct: "like to say something if"
+            correct: ["like", "to", "say", "something", "if"],
+            displayPrompt: "I’d .................... I may."
+        },
+        {   // gap 2: "for / second / just / a / interrupt" → correct: "just for a second interrupt" BUT original order: "If I could just for a second interrupt" — wait, check source: "If I could 2________________________________ for / second / just / a / interrupt." correct sequence: just / for / a / second / interrupt? Actually natural: "just for a second interrupt". But we must match the exact words: "for / second / just / a / interrupt". Logical order: "just for a second interrupt". -> ["just", "for", "a", "second", "interrupt"]
+            correct: ["just", "for", "a", "second", "interrupt"],
+            displayPrompt: "If I could .................... Don’t forget that we have another meeting at 4."
+        },
+        {   // gap 3: "to / that / comment / like / on" → correct: "like to comment on that"
+            correct: ["like", "to", "comment", "on", "that"],
+            displayPrompt: "I’d ...................., actually. There’s something I’d like to add to it."
+        },
+        {   // gap 4: "me / interrupting / excuse / for" → correct: "excuse me for interrupting"
+            correct: ["excuse", "me", "for", "interrupting"],
+            displayPrompt: "...................., but that’s already there under the second item on the agenda – business relations."
+        },
+        {   // gap 5: "say / I / can / here / something" → correct: "can I say something here"
+            correct: ["can", "I", "say", "something", "here"],
+            displayPrompt: "But ....................?"
+        }
+    ];
+
+    // full dialogue segments with placeholders
+    const dialogueSegments = [
+        { speaker: "Kostas:", text: "So, Mr Yakamoto will be with us at around 11 o’clock. He’s coming straight from the airport." },
+        { speaker: "Irina:", text: "That’s the plan, but I’d ___GAP0___ I may." },
+        { speaker: "Kostas:", text: "Sure, go ahead." },
+        { speaker: "Irina:", text: "He’s bound to be tired after such a long flight so I think he’d appreciate it if he could go to his hotel for a rest first." },
+        { speaker: "Kostas:", text: "Good point. Yes, let’s make the meeting a little later. How about half past two? And that …" },
+        { speaker: "Irina:", text: "If I could ___GAP1___ Don’t forget that we have another meeting at 4. And it’s an important one too." },
+        { speaker: "Kostas:", text: "Well, I don’t think the meeting with Mr Yakamoto is likely to go past our scheduled finish time. I’m sure he’s got a lot to do. Anyway, I’ve drawn up an agenda for our meeting. Have you had a look at it?" },
+        { speaker: "Irina:", text: "I’d ___GAP2___, actually. There’s something I’d like to add to it. I think we should spend some time discussing plans for increased trade with Japan. It would certainly …" },
+        { speaker: "Kostas:", text: "___GAP3___, but that’s already there under the second item on the agenda – business relations." },
+        { speaker: "Irina:", text: "Oh, yes. Apologies, I missed that completely. But ___GAP4___" },
+        { speaker: "Kostas:", text: "Yes, of course …" }
+    ];
+
+    // state for each gap: current ordered array (filled slots)
+    let currentOrders = [];
+    // original shuffled pools (draggable words) for each gap
+    let wordPools = [];
+
+    // helper: shuffle array
+    function shuffleArray(arr) {
+        const copy = [...arr];
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    // initialize/reset all gaps
+    function initGame() {
+        currentOrders = [];
+        wordPools = [];
+        for (let i = 0; i < gapsData.length; i++) {
+            // start with empty order (no word placed yet)
+            currentOrders.push([]);
+            // create shuffled pool from the correct words
+            const correctWords = gapsData[i].correct;
+            wordPools.push(shuffleArray([...correctWords]));
+        }
+    }
+
+    // render the whole dialogue
+    function renderDialogue() {
+        const root = document.getElementById('dialogueRoot');
+        if (!root) return;
+        let html = '';
+
+        for (let seg of dialogueSegments) {
+            let textWithGaps = seg.text;
+            // replace ___GAP0___ , ___GAP1___ etc with interactive elements
+            for (let g = 0; g < gapsData.length; g++) {
+                const placeholder = `___GAP${g}___`;
+                if (textWithGaps.includes(placeholder)) {
+                    const gapHtml = renderGap(g);
+                    textWithGaps = textWithGaps.replace(placeholder, gapHtml);
+                }
+            }
+            html += `<div class="speech"><span class="speaker">${seg.speaker}</span> <span class="text">${textWithGaps}</span></div>`;
+        }
+
+        // add check & reset buttons + feedback area
+        html += `<div class="check-area">
+                    <button class="btn" id="checkAnswersBtn">✔ Check answers</button>
+                    <button class="btn btn-secondary" id="resetGapsBtn">⟳ Reset all gaps</button>
+                 </div>
+                 <div id="feedbackMessage" class="feedback"></div>
+                 <div class="small-note">💡 Drag any word from the pool into the slots above. Click on a placed word to remove it.</div>`;
+        root.innerHTML = html;
+
+        // attach event listeners after DOM rendering (dynamic elements)
+        attachDragEvents();
+        document.getElementById('checkAnswersBtn')?.addEventListener('click', checkAllAnswers);
+        document.getElementById('resetGapsBtn')?.addEventListener('click', () => {
+            initGame();
+            renderDialogue();
+        });
+    }
+
+    // render a specific gap: shows current slots (ordered words) + remaining pool
+    function renderGap(gapIndex) {
+        const currentSeq = currentOrders[gapIndex];
+        const pool = wordPools[gapIndex];
+        const isComplete = currentSeq.length === gapsData[gapIndex].correct.length;
+
+        // slots (ordered area)
+        let slotsHtml = `<span class="slot-container" data-gap="${gapIndex}">`;
+        if (currentSeq.length === 0) {
+            slotsHtml += `<span style="color:#8da38d; font-size:13px;">⟵ drag words here</span>`;
+        } else {
+            currentSeq.forEach((word, idx) => {
+                slotsHtml += `<span class="slot-word" data-gap="${gapIndex}" data-word="${word}" data-idx="${idx}">${word} ✕</span>`;
+            });
+        }
+        slotsHtml += `</span>`;
+
+        // draggable pool (only if not complete)
+        let poolHtml = `<span class="word-gap" data-pool="${gapIndex}">`;
+        if (!isComplete) {
+            pool.forEach((word, idx) => {
+                poolHtml += `<span class="word-option" draggable="true" data-gap="${gapIndex}" data-word="${word}" data-poolidx="${idx}">${word}</span>`;
+            });
+        } else {
+            poolHtml += `<span style="font-size:12px; color:#7aa57a;">✓ complete</span>`;
+        }
+        poolHtml += `</span>`;
+
+        return `${slotsHtml} ${poolHtml}`;
+    }
+
+    // drag & drop handlers (using native drag and drop)
+    function attachDragEvents() {
+        // make draggable elements fire dragstart
+        const draggables = document.querySelectorAll('.word-option');
+        draggables.forEach(el => {
+            el.setAttribute('draggable', 'true');
+            el.addEventListener('dragstart', handleDragStart);
+            el.addEventListener('dragend', handleDragEnd);
+        });
+
+        // slot containers as drop targets
+        const slotContainers = document.querySelectorAll('.slot-container');
+        slotContainers.forEach(container => {
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault(); // necessary for drop
+                container.style.backgroundColor = '#e2f0e2';
+            });
+            container.addEventListener('dragleave', () => {
+                container.style.backgroundColor = '';
+            });
+            container.addEventListener('drop', handleDropOnSlot);
+        });
+
+        // also allow removing a word by clicking on slot-word
+        const slotWords = document.querySelectorAll('.slot-word');
+        slotWords.forEach(slotWord => {
+            slotWord.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const gap = parseInt(slotWord.dataset.gap);
+                const word = slotWord.dataset.word;
+                if (!isNaN(gap)) {
+                    removeWordFromSlot(gap, word);
+                }
+            });
+        });
+    }
+
+    let dragSourceData = null;
+
+    function handleDragStart(e) {
+        const target = e.target.closest('.word-option');
+        if (!target) {
+            e.preventDefault();
+            return false;
+        }
+        const gapIdx = target.dataset.gap;
+        const word = target.dataset.word;
+        const poolIdx = target.dataset.poolidx;
+        if (gapIdx === undefined) return;
+        dragSourceData = {
+            gapIndex: parseInt(gapIdx),
+            word: word,
+            poolIndex: parseInt(poolIdx)
+        };
+        e.dataTransfer.setData('text/plain', JSON.stringify(dragSourceData));
+        e.dataTransfer.effectAllowed = 'move';
+        target.classList.add('dragging');
+    }
+
+    function handleDragEnd(e) {
+        const target = e.target.closest('.word-option');
+        if (target) target.classList.remove('dragging');
+        dragSourceData = null;
+        // reset container backgrounds
+        document.querySelectorAll('.slot-container').forEach(cont => {
+            cont.style.backgroundColor = '';
+        });
+    }
+
+    function handleDropOnSlot(e) {
+        e.preventDefault();
+        const slotContainer = e.target.closest('.slot-container');
+        if (!slotContainer) return;
+        const targetGap = parseInt(slotContainer.dataset.gap);
+        if (isNaN(targetGap)) return;
+
+        let dragData;
+        try {
+            const rawData = e.dataTransfer.getData('text/plain');
+            dragData = JSON.parse(rawData);
+        } catch (err) {
+            return;
+        }
+        if (!dragData) return;
+
+        const sourceGap = dragData.gapIndex;
+        const word = dragData.word;
+
+        // we only allow drag from same gap pool? Actually yes — words belong to specific gap.
+        if (sourceGap !== targetGap) {
+            showTemporaryFeedback("❗ You can only drag words into the matching gap (same row).", false);
+            return;
+        }
+
+        // check if the word is still in pool (avoid double move)
+        const poolArray = wordPools[sourceGap];
+        const wordExistsInPool = poolArray.includes(word);
+        if (!wordExistsInPool) {
+            showTemporaryFeedback("This word has already been used.", false);
+            return;
+        }
+
+        // add word to current order (append at end)
+        const currentSeq = currentOrders[sourceGap];
+        const correctLen = gapsData[sourceGap].correct.length;
+        if (currentSeq.length >= correctLen) {
+            showTemporaryFeedback("This gap already has the maximum number of words. Remove one first.", false);
+            return;
+        }
+
+        // remove from pool
+        const wordIndexInPool = poolArray.indexOf(word);
+        if (wordIndexInPool !== -1) poolArray.splice(wordIndexInPool, 1);
+        // add to current order
+        currentOrders[sourceGap].push(word);
+
+        // re-render dialogue to reflect updated UI
+        renderDialogue();
+        // after re-render, show subtle success message
+        showTemporaryFeedback(`✓ "${word}" added. Keep ordering!`, true);
+    }
+
+    function removeWordFromSlot(gapIndex, word) {
+        const currentSeq = currentOrders[gapIndex];
+        const wordPos = currentSeq.indexOf(word);
+        if (wordPos !== -1) {
+            currentSeq.splice(wordPos, 1);
+            // return word to pool
+            const pool = wordPools[gapIndex];
+            pool.push(word);
+            // reshuffle pool slightly for better UX (optional)
+            wordPools[gapIndex] = shuffleArray(pool);
+            renderDialogue();
+            showTemporaryFeedback(`⟲ Removed "${word}". You can place it again.`, true);
+        }
+    }
+
+    let timeoutId = null;
+    function showTemporaryFeedback(msg, isSuccess) {
+        const fbDiv = document.getElementById('feedbackMessage');
+        if (!fbDiv) return;
+        fbDiv.textContent = msg;
+        fbDiv.className = 'feedback';
+        if (isSuccess) fbDiv.classList.add('correct');
+        else fbDiv.classList.add('wrong');
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            if (fbDiv) {
+                fbDiv.className = 'feedback';
+                fbDiv.textContent = '';
+            }
+        }, 1800);
+    }
+
+    // check all answers
+    function checkAllAnswers() {
+        let allCorrect = true;
+        const results = [];
+        for (let i = 0; i < gapsData.length; i++) {
+            const userSeq = currentOrders[i];
+            const correctSeq = gapsData[i].correct;
+            const isCorrect = arraysEqual(userSeq, correctSeq);
+            if (!isCorrect) allCorrect = false;
+            results.push({ gap: i, correct: isCorrect, user: userSeq, expected: correctSeq });
+        }
+
+        if (allCorrect) {
+            let perfectMsg = "✅ Perfect! All phrases are in the correct order. Excellent diplomatic language!";
+            document.getElementById('feedbackMessage').innerHTML = perfectMsg;
+            document.getElementById('feedbackMessage').className = 'feedback correct';
+        } else {
+            let wrongMsg = "⚠️ Some gaps have the wrong word order. ";
+            for (let res of results) {
+                if (!res.correct) {
+                    const expectedStr = res.expected.join(' ');
+                    const userStr = res.user.length ? res.user.join(' ') : '(empty)';
+                    wrongMsg += `<br><strong>Gap ${res.gap+1}:</strong> your order: “${userStr}” → correct: “${expectedStr}”. `;
+                }
+            }
+            wrongMsg += `<br>💡 Drag words into the correct sequence (read the full sentence to guess natural flow).`;
+            const fbDiv = document.getElementById('feedbackMessage');
+            fbDiv.innerHTML = wrongMsg;
+            fbDiv.className = 'feedback wrong';
+        }
+
+        // scroll to feedback
+        document.getElementById('feedbackMessage')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function arraysEqual(a, b) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
+    // restart / full reset
+    function resetFullGame() {
+        initGame();
+        renderDialogue();
+        const fb = document.getElementById('feedbackMessage');
+        if (fb) {
+            fb.className = 'feedback';
+            fb.innerHTML = '';
+        }
+    }
+
+    // helper: initial load
+    initGame();
+    renderDialogue();
+</script>
+</body>
+</html>
