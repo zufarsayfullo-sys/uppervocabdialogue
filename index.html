@@ -105,7 +105,7 @@
             font-size: 14px;
             font-weight: 500;
             color: #1c4d4d;
-            cursor: grab;
+            cursor: pointer;
             user-select: none;
             transition: 0.1s linear;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 0 1px #e2e8e2;
@@ -113,12 +113,14 @@
             letter-spacing: 0.2px;
         }
 
-        .word-option:active {
-            cursor: grabbing;
+        .word-option:hover {
+            background: #e6f0e6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
 
-        .word-option.dragging {
-            opacity: 0.4;
+        .word-option:active {
+            transform: scale(0.97);
         }
 
         .slot-container {
@@ -132,6 +134,7 @@
             margin: 0 6px;
             border: 1px dashed #8fa88f;
             min-width: 180px;
+            transition: background 0.1s;
         }
 
         .slot-word {
@@ -257,7 +260,7 @@
 <div class="exercise-container">
     <div class="header">
         <h1>📋 diplomatic agenda · <span>word order</span></h1>
-        <div class="sub">Read the dialogue. Put the words in italics in the right order to complete each gap.</div>
+        <div class="sub">Read the dialogue. Click on any word to move it into the gap. Click on a placed word to remove it.</div>
     </div>
     <div class="dialogue-box" id="dialogueRoot">
         <!-- dynamic dialogue will be rendered here -->
@@ -272,7 +275,7 @@
             correct: ["like", "to", "say", "something", "if"],
             displayPrompt: "I’d .................... I may."
         },
-        {   // gap 2: "for / second / just / a / interrupt" → correct: "just interrupt for a second" BUT original order: "If I could just for a second interrupt" — wait, check source: "If I could 2________________________________ for / second / just / a / interrupt." correct sequence: just / for / a / second / interrupt? Actually natural: "just for a second interrupt". But we must match the exact words: "for / second / just / a / interrupt". Logical order: "just for a second interrupt". -> ["just", "for", "a", "second", "interrupt"]
+        {   // gap 2: "for / second / just / a / interrupt" → correct: "just interrupt for a second" BUT original order: "If I could just for a second interrupt" — wait, check source: "If I could 2________________________________ for / second / just / a / interrupt." correct sequence: just / for / a / second / interrupt? Actually natural: "just for a second interrupt". -> ["just", "for", "a", "second", "interrupt"]
             correct: ["just", "for", "a", "second", "interrupt"],
             displayPrompt: "If I could .................... Don’t forget that we have another meeting at 4."
         },
@@ -307,7 +310,7 @@
 
     // state for each gap: current ordered array (filled slots)
     let currentOrders = [];
-    // original shuffled pools (draggable words) for each gap
+    // original shuffled pools (clickable words) for each gap
     let wordPools = [];
 
     // helper: shuffle array
@@ -358,11 +361,11 @@
                     <button class="btn btn-secondary" id="resetGapsBtn">⟳ Reset all gaps</button>
                  </div>
                  <div id="feedbackMessage" class="feedback"></div>
-                 <div class="small-note">💡 Drag any word from the pool into the slots above. Click on a placed word to remove it.</div>`;
+                 <div class="small-note">💡 Click a word from the pool to add it to the gap. Click any placed word (with ✕) to remove it.</div>`;
         root.innerHTML = html;
 
-        // attach event listeners after DOM rendering (dynamic elements)
-        attachDragEvents();
+        // attach event listeners after DOM rendering (using one-click logic instead of drag & drop)
+        attachClickEvents();
         document.getElementById('checkAnswersBtn')?.addEventListener('click', checkAllAnswers);
         document.getElementById('resetGapsBtn')?.addEventListener('click', () => {
             initGame();
@@ -370,7 +373,7 @@
         });
     }
 
-    // render a specific gap: shows current slots (ordered words) + remaining pool
+    // render a specific gap: shows current slots (ordered words) + remaining pool (clickable)
     function renderGap(gapIndex) {
         const currentSeq = currentOrders[gapIndex];
         const pool = wordPools[gapIndex];
@@ -379,7 +382,7 @@
         // slots (ordered area)
         let slotsHtml = `<span class="slot-container" data-gap="${gapIndex}">`;
         if (currentSeq.length === 0) {
-            slotsHtml += `<span style="color:#8da38d; font-size:13px;">⟵ drag words here</span>`;
+            slotsHtml += `<span style="color:#8da38d; font-size:13px;">⟵ click words below</span>`;
         } else {
             currentSeq.forEach((word, idx) => {
                 slotsHtml += `<span class="slot-word" data-gap="${gapIndex}" data-word="${word}" data-idx="${idx}">${word} ✕</span>`;
@@ -387,11 +390,11 @@
         }
         slotsHtml += `</span>`;
 
-        // draggable pool (only if not complete)
+        // clickable pool (only if not complete)
         let poolHtml = `<span class="word-gap" data-pool="${gapIndex}">`;
         if (!isComplete) {
             pool.forEach((word, idx) => {
-                poolHtml += `<span class="word-option" draggable="true" data-gap="${gapIndex}" data-word="${word}" data-poolidx="${idx}">${word}</span>`;
+                poolHtml += `<span class="word-option" data-gap="${gapIndex}" data-word="${word}" data-poolidx="${idx}">${word}</span>`;
             });
         } else {
             poolHtml += `<span style="font-size:12px; color:#7aa57a;">✓ complete</span>`;
@@ -401,140 +404,90 @@
         return `${slotsHtml} ${poolHtml}`;
     }
 
-    // drag & drop handlers (using native drag and drop)
-    function attachDragEvents() {
-        // make draggable elements fire dragstart
-        const draggables = document.querySelectorAll('.word-option');
-        draggables.forEach(el => {
-            el.setAttribute('draggable', 'true');
-            el.addEventListener('dragstart', handleDragStart);
-            el.addEventListener('dragend', handleDragEnd);
+    // ----- ONE-CLICK LOGIC (no drag, simple click-to-move) -----
+    function attachClickEvents() {
+        // 1) Click on word in pool => move it to the slots (append to current order)
+        const wordOptions = document.querySelectorAll('.word-option');
+        wordOptions.forEach(option => {
+            option.removeEventListener('click', handleWordClick);
+            option.addEventListener('click', handleWordClick);
         });
 
-        // slot containers as drop targets
+        // 2) Click on slot-word (placed word) => remove it from slots, return to pool
+        const slotWords = document.querySelectorAll('.slot-word');
+        slotWords.forEach(slot => {
+            slot.removeEventListener('click', handleSlotWordClick);
+            slot.addEventListener('click', handleSlotWordClick);
+        });
+
+        // optional visual feedback for slot containers
         const slotContainers = document.querySelectorAll('.slot-container');
         slotContainers.forEach(container => {
-            container.addEventListener('dragover', (e) => {
-                e.preventDefault(); // necessary for drop
+            container.style.transition = 'background 0.1s';
+            container.addEventListener('mouseenter', () => {
                 container.style.backgroundColor = '#e2f0e2';
             });
-            container.addEventListener('dragleave', () => {
+            container.addEventListener('mouseleave', () => {
                 container.style.backgroundColor = '';
             });
-            container.addEventListener('drop', handleDropOnSlot);
-        });
-
-        // also allow removing a word by clicking on slot-word
-        const slotWords = document.querySelectorAll('.slot-word');
-        slotWords.forEach(slotWord => {
-            slotWord.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const gap = parseInt(slotWord.dataset.gap);
-                const word = slotWord.dataset.word;
-                if (!isNaN(gap)) {
-                    removeWordFromSlot(gap, word);
-                }
-            });
         });
     }
 
-    let dragSourceData = null;
-
-    function handleDragStart(e) {
-        const target = e.target.closest('.word-option');
-        if (!target) {
-            e.preventDefault();
-            return false;
-        }
-        const gapIdx = target.dataset.gap;
+    function handleWordClick(event) {
+        event.stopPropagation();
+        const target = event.currentTarget;
+        const gapIdx = parseInt(target.dataset.gap);
         const word = target.dataset.word;
-        const poolIdx = target.dataset.poolidx;
-        if (gapIdx === undefined) return;
-        dragSourceData = {
-            gapIndex: parseInt(gapIdx),
-            word: word,
-            poolIndex: parseInt(poolIdx)
-        };
-        e.dataTransfer.setData('text/plain', JSON.stringify(dragSourceData));
-        e.dataTransfer.effectAllowed = 'move';
-        target.classList.add('dragging');
-    }
+        
+        if (isNaN(gapIdx) || !word) return;
 
-    function handleDragEnd(e) {
-        const target = e.target.closest('.word-option');
-        if (target) target.classList.remove('dragging');
-        dragSourceData = null;
-        // reset container backgrounds
-        document.querySelectorAll('.slot-container').forEach(cont => {
-            cont.style.backgroundColor = '';
-        });
-    }
-
-    function handleDropOnSlot(e) {
-        e.preventDefault();
-        const slotContainer = e.target.closest('.slot-container');
-        if (!slotContainer) return;
-        const targetGap = parseInt(slotContainer.dataset.gap);
-        if (isNaN(targetGap)) return;
-
-        let dragData;
-        try {
-            const rawData = e.dataTransfer.getData('text/plain');
-            dragData = JSON.parse(rawData);
-        } catch (err) {
-            return;
-        }
-        if (!dragData) return;
-
-        const sourceGap = dragData.gapIndex;
-        const word = dragData.word;
-
-        // we only allow drag from same gap pool? Actually yes — words belong to specific gap.
-        if (sourceGap !== targetGap) {
-            showTemporaryFeedback("❗ You can only drag words into the matching gap (same row).", false);
+        // Check if the word still exists in the pool (avoid race conditions)
+        const poolArray = wordPools[gapIdx];
+        if (!poolArray.includes(word)) {
+            showTemporaryFeedback(`"${word}" is already used.`, false);
             return;
         }
 
-        // check if the word is still in pool (avoid double move)
-        const poolArray = wordPools[sourceGap];
-        const wordExistsInPool = poolArray.includes(word);
-        if (!wordExistsInPool) {
-            showTemporaryFeedback("This word has already been used.", false);
-            return;
-        }
-
-        // add word to current order (append at end)
-        const currentSeq = currentOrders[sourceGap];
-        const correctLen = gapsData[sourceGap].correct.length;
+        const currentSeq = currentOrders[gapIdx];
+        const correctLen = gapsData[gapIdx].correct.length;
+        
         if (currentSeq.length >= correctLen) {
-            showTemporaryFeedback("This gap already has the maximum number of words. Remove one first.", false);
+            showTemporaryFeedback(`This gap already has the maximum number of words. Remove one first.`, false);
             return;
         }
 
-        // remove from pool
-        const wordIndexInPool = poolArray.indexOf(word);
-        if (wordIndexInPool !== -1) poolArray.splice(wordIndexInPool, 1);
-        // add to current order
-        currentOrders[sourceGap].push(word);
-
-        // re-render dialogue to reflect updated UI
+        // Add word to current order (append at end - preserves order of selection)
+        currentOrders[gapIdx].push(word);
+        
+        // Remove word from pool
+        const wordIndex = poolArray.indexOf(word);
+        if (wordIndex !== -1) poolArray.splice(wordIndex, 1);
+        
+        // Re-render to update UI
         renderDialogue();
-        // after re-render, show subtle success message
-        showTemporaryFeedback(`✓ "${word}" added. Keep ordering!`, true);
+        showTemporaryFeedback(`✓ Added "${word}". Click words in correct order to form the phrase.`, true);
     }
 
-    function removeWordFromSlot(gapIndex, word) {
-        const currentSeq = currentOrders[gapIndex];
-        const wordPos = currentSeq.indexOf(word);
-        if (wordPos !== -1) {
-            currentSeq.splice(wordPos, 1);
-            // return word to pool
-            const pool = wordPools[gapIndex];
-            pool.push(word);
-            // reshuffle pool slightly for better UX (optional)
-            wordPools[gapIndex] = shuffleArray(pool);
+    function handleSlotWordClick(event) {
+        event.stopPropagation();
+        const target = event.currentTarget;
+        const gapIdx = parseInt(target.dataset.gap);
+        const word = target.dataset.word;
+        
+        if (isNaN(gapIdx) || !word) return;
+        
+        const currentSeq = currentOrders[gapIdx];
+        const wordPosition = currentSeq.indexOf(word);
+        if (wordPosition !== -1) {
+            // Remove from sequence
+            currentSeq.splice(wordPosition, 1);
+            // Return word to pool
+            const poolArray = wordPools[gapIdx];
+            poolArray.push(word);
+            // Optional: reshuffle pool slightly for better UX
+            wordPools[gapIdx] = shuffleArray(poolArray);
             renderDialogue();
-            showTemporaryFeedback(`⟲ Removed "${word}". You can place it again.`, true);
+            showTemporaryFeedback(`⟲ Removed "${word}". You can click it again to re-add.`, true);
         }
     }
 
@@ -552,7 +505,7 @@
                 fbDiv.className = 'feedback';
                 fbDiv.textContent = '';
             }
-        }, 1800);
+        }, 2000);
     }
 
     // check all answers
@@ -569,8 +522,9 @@
 
         if (allCorrect) {
             let perfectMsg = "✅ Perfect! All phrases are in the correct order. Excellent diplomatic language!";
-            document.getElementById('feedbackMessage').innerHTML = perfectMsg;
-            document.getElementById('feedbackMessage').className = 'feedback correct';
+            const fbDiv = document.getElementById('feedbackMessage');
+            fbDiv.innerHTML = perfectMsg;
+            fbDiv.className = 'feedback correct';
         } else {
             let wrongMsg = "⚠️ Some gaps have the wrong word order. ";
             for (let res of results) {
@@ -580,7 +534,7 @@
                     wrongMsg += `<br><strong>Gap ${res.gap+1}:</strong> your order: “${userStr}” → correct: “${expectedStr}”. `;
                 }
             }
-            wrongMsg += `<br>💡 Drag words into the correct sequence (read the full sentence to guess natural flow).`;
+            wrongMsg += `<br>💡 Click words in the correct sequence (the natural flow of the sentence). Use ✕ to remove and reorder.`;
             const fbDiv = document.getElementById('feedbackMessage');
             fbDiv.innerHTML = wrongMsg;
             fbDiv.className = 'feedback wrong';
